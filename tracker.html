@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Evidence Tracker</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- firesbasecode -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <!-- firesbasecode -->
+
+    <!-- Google Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
+    <!-- AOS -->
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #eef2ff, #f8fafc);
+            min-height: 100vh;
+        }
+
+        .header {
+            padding: 35px 20px;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        .header h1 {
+            color: #1e293b;
+            font-weight: 600;
+        }
+
+        .header p {
+            color: #64748b;
+            margin-top: 6px;
+        }
+
+        .container {
+            padding: 40px 8%;
+        }
+
+        /* Form Card */
+        .form-card {
+            background: white;
+            padding: 25px;
+            border-radius: 14px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+            margin-bottom: 40px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px solid #e2e8f0;
+            font-family: 'Poppins', sans-serif;
+            transition: 0.3s ease;
+        }
+
+        input:focus,
+        select:focus {
+            border-color: #4f46e5;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        .btn {
+            padding: 10px 18px;
+            background: linear-gradient(135deg, #4f46e5, #06b6d4);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: 0.3s ease;
+        }
+
+        .btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 25px rgba(79, 70, 229, 0.3);
+        }
+
+        .delete-btn {
+            background: #ef4444;
+        }
+
+        .delete-btn:hover {
+            background: #dc2626;
+            transform: scale(1.05);
+        }
+
+        /* Table */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+        }
+
+        th {
+            background: #f1f5f9;
+            padding: 14px;
+            text-align: left;
+            font-size: 14px;
+            color: #475569;
+        }
+
+        td {
+            padding: 14px;
+            border-top: 1px solid #f1f5f9;
+            font-size: 14px;
+            color: #334155;
+        }
+
+        tr:hover {
+            background: #f8fafc;
+        }
+
+        /* Deletbtn */
+        .action-btn {
+            padding: 6px 10px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-size: 12px;
+            transition: 0.2s ease;
+        }
+
+        .delete-btn {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+
+        .delete-btn:hover {
+            background: #fecaca;
+        }
+
+        /* Deletbtn */
+
+
+        .action-cell {
+            display: flex;
+            gap: 8px;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="header" data-aos="fade-down">
+        <h1>Evidence Tracker</h1>
+        <p>Track SOC 2 / ISO 27001 Audit Evidence</p>
+    </div>
+
+    <div class="container">
+
+        <div class="form-card" data-aos="fade-up">
+            <h3 style="margin-bottom:15px;">Add New Control</h3>
+
+            <div class="form-group">
+                <input type="text" id="controlName" placeholder="Control Name (e.g., Access Review)">
+            </div>
+
+            <div class="form-group">
+                <select id="category">
+                    <option value="">Select Category</option>
+                    <option>Access Review</option>
+                    <option>Change Management</option>
+                    <option>Incident Logs</option>
+                    <option>Backups</option>
+                    <option>Vendor Compliance</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <select id="status">
+                    <option value="Pending">Pending</option>
+                    <option value="Collected">Collected</option>
+                </select>
+            </div>
+
+            <button class="btn" onclick="addControl()">Add Control</button>
+        </div>
+
+        <table data-aos="fade-up" data-aos-delay="200">
+            <thead>
+                <tr>
+                    <th>Control Name</th>
+                    <th>Category</th>
+                    <th>Status</th>
+                    <th>Evidence</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="trackerTable"></tbody>
+        </table>
+
+    </div>
+
+    <!-- AOS -->
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>
+        AOS.init({ duration: 800, once: true });
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCv0WYRic-2y5LhM_QNt1DiDCAWJh6-cnE",
+            authDomain: "compliance-evidence-app-test1.firebaseapp.com",
+            projectId: "compliance-evidence-app-test1",
+            appId: "1:80780624104:web:126ab773c08fa77aea495d"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+
+        const db = firebase.firestore(); // 🔗 Connect to Firestore
+
+        // ➕ Add new control (SAVE to Firestore)
+        function addControl() {
+            const name = document.getElementById("controlName").value;
+            const category = document.getElementById("category").value;
+            const status = document.getElementById("status").value;
+
+            if (!name || !category) {
+                alert("Please fill all fields");
+                return;
+            }
+
+            db.collection("controls").add({
+                name: name,
+                category: category,
+                status: status,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            }).then(() => {
+                document.getElementById("controlName").value = "";
+                document.getElementById("category").value = "";
+                loadControls(); // reload table from Firestore
+            }).catch((error) => {
+                console.error("Error adding document: ", error);
+                alert("Failed to save to database");
+            });
+        }
+
+        // 📥 Load controls (READ from Firestore)
+        function loadControls() {
+            const table = document.getElementById("trackerTable");
+            table.innerHTML = "";
+
+            db.collection("controls").get()
+                .then((querySnapshot) => {
+                    querySnapshot.forEach((doc) => {
+                        const data = doc.data();
+                        const row = table.insertRow();
+
+                        row.insertCell(0).innerText = data.name;
+                        row.insertCell(1).innerText = data.category;
+
+                        // Status dropdown
+                        const statusCell = row.insertCell(2);
+                        const select = document.createElement("select");
+                        ["Pending", "Collected"].forEach((s) => {
+                            const opt = document.createElement("option");
+                            opt.value = s;
+                            opt.text = s;
+                            if (data.status === s) opt.selected = true;
+                            select.appendChild(opt);
+                        });
+                        select.onchange = () => updateStatus(doc.id, select.value);
+                        statusCell.appendChild(select);
+
+                        // 📎 Evidence (local file upload)
+                        const evidenceCell = row.insertCell(3);
+                        const fileInput = document.createElement("input");
+                        fileInput.type = "file";
+                        fileInput.onchange = (e) => saveLocalEvidence(doc.id, e.target.files[0]);
+                        evidenceCell.appendChild(fileInput);
+
+                        // Show file name if already saved
+                        if (data.evidenceName) {
+                            const nameTag = document.createElement("div");
+                            nameTag.innerText = "📄 " + data.evidenceName;
+                            nameTag.style.fontSize = "12px";
+                            nameTag.style.marginTop = "6px";
+                            evidenceCell.appendChild(nameTag);
+                        }
+
+                        // Actions (Delete)
+                        const actionCell = row.insertCell(4);
+                        const delBtn = document.createElement("button");
+                        delBtn.innerText = "Delete";
+                        delBtn.className = "action-btn delete-btn";
+                        delBtn.onclick = () => deleteControl(doc.id);
+                        actionCell.appendChild(delBtn);
+                    });
+                });
+        }
+
+
+        function saveLocalEvidence(docId, file) {
+            if (!file) return;
+
+            db.collection("controls").doc(docId).update({
+                evidenceName: file.name,
+                evidenceType: file.type,
+                evidenceSize: file.size
+            }).then(() => {
+                loadControls();
+                alert("Evidence attached (local reference)");
+            }).catch((err) => {
+                console.error(err);
+                alert("Failed to attach evidence");
+            });
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        function updateStatus(id, newStatus) {
+            db.collection("controls").doc(id).update({
+                status: newStatus
+            }).then(() => {
+                console.log("Status updated");
+            }).catch((err) => console.error(err));
+        }
+
+        function deleteControl(id) {
+            if (!confirm("Delete this control?")) return;
+
+            db.collection("controls").doc(id).delete()
+                .then(() => loadControls())
+                .catch((err) => console.error(err));
+        }
+
+        window.addEventListener("load", () => {
+            loadControls();
+        });
+    </script>
+
+</body>
+
+</html>

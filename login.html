@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Login • Compliance Evidence Manager</title>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+
+    <!-- Google Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <!-- AOS Animation Library -->
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --secondary: #06b6d4;
+            --textPrimary: #1e293b;
+            --textSecondary: #64748b;
+            --radius: 14px;
+            --shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+            --bg: linear-gradient(135deg, #eef2ff, #f8fafc);
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: var(--bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--textPrimary);
+        }
+
+        .login-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 40px 36px;
+            width: 100%;
+            max-width: 420px;
+            text-align: center;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .login-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
+        }
+
+        .login-card h1 {
+            margin-bottom: 8px;
+            font-size: 26px;
+            font-weight: 600;
+        }
+
+        .login-card p {
+            margin-bottom: 28px;
+            color: var(--textSecondary);
+            font-size: 14px;
+        }
+
+        .form-group {
+            text-align: left;
+            margin-bottom: 18px;
+        }
+
+        .form-group label {
+            font-size: 13px;
+            color: var(--textSecondary);
+            margin-bottom: 6px;
+            display: block;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 14px;
+            border-radius: var(--radius);
+            border: 1px solid #e5e7eb;
+            outline: none;
+            font-size: 14px;
+            transition: 0.3s ease;
+        }
+
+        .form-group input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+        }
+
+        .btn {
+            width: 100%;
+            border: none;
+            border-radius: var(--radius);
+            padding: 12px;
+            font-size: 15px;
+            font-weight: 500;
+            color: #fff;
+            cursor: pointer;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 0 6px 14px rgba(79, 70, 229, 0.25);
+            margin-top: 10px;
+        }
+
+        .btn:hover {
+            transform: scale(1.03);
+            box-shadow: 0 10px 24px rgba(79, 70, 229, 0.35);
+        }
+
+        .footer-text {
+            margin-top: 18px;
+            font-size: 13px;
+            color: var(--textSecondary);
+        }
+
+        .footer-text a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 500;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="login-card" data-aos="fade-up">
+        <h1>Welcome Back 👋</h1>
+        <p>Login to your Compliance Dashboard</p>
+
+        <div class="form-group">
+            <label>Email</label>
+            <input type="email" id="email" placeholder="you@company.com" />
+        </div>
+
+        <div class="form-group">
+            <label>Password</label>
+            <input type="password" id="password" placeholder="••••••••" />
+        </div>
+
+        <button class="btn" onclick="login()">Login</button>
+
+        <div class="footer-text">
+            Don’t have an account? <a href="#">Create one</a>
+        </div>
+
+        <p id="msg" style="color:#ef4444; margin-top:12px;"></p>
+    </div>
+    
+
+    <!-- AOS Script -->
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>
+        AOS.init({
+            duration: 800,
+            once: true
+        });
+    </script>
+
+
+
+
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+
+    <script>
+
+        // 🔐 Paste your REAL Firebase config here (from Firebase Console)
+        const firebaseConfig = {
+            apiKey: "AIzaSyCv0WYRic-2y5LhM_QNt1DiDCAWJh6-cnE",
+            authDomain: "compliance-evidence-app-test1.firebaseapp.com",
+            projectId: "compliance-evidence-app-test1",
+            appId: "1:80780624104:web:126ab773c08fa77aea495d"
+        };
+
+        firebase.auth().onAuthStateChanged((user) => {
+            if (!user) {
+                // ❌ Not logged in → go back to login page
+                window.location.href = "login.html";
+            } else {
+                // ✅ Logged in → allow dashboard
+                console.log("User logged in:", user.email);
+            }
+        });
+    </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+
+</html>

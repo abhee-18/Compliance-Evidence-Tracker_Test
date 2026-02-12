@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Compliance Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Google Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
+    <!-- AOS Animation Library -->
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #eef2ff, #f8fafc);
+            min-height: 100vh;
+        }
+
+        .header {
+            padding: 40px 20px;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        .header h1 {
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .header p {
+            margin-top: 8px;
+            color: #64748b;
+        }
+
+        .container {
+            padding: 40px 8%;
+        }
+
+        .cards {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-bottom: 40px;
+        }
+
+        .card {
+            background: white;
+            flex: 1 1 220px;
+            padding: 25px;
+            border-radius: 14px;
+            text-align: center;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .card p {
+            color: #64748b;
+            font-size: 14px;
+        }
+
+        .card h2 {
+            margin-top: 10px;
+            font-size: 32px;
+            color: #4f46e5;
+            font-weight: 600;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 14px 28px;
+            background: linear-gradient(135deg, #4f46e5, #06b6d4);
+            color: white;
+            text-decoration: none;
+            border-radius: 12px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 25px rgba(79, 70, 229, 0.3);
+        }
+
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 15px;
+            }
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        @media (max-width: 768px) {
+            .cards {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="header" data-aos="fade-down">
+        <h1>Compliance Evidence Management</h1>
+        <p>SOC 2 / ISO 27001 Audit Dashboard</p>
+        
+    </div>
+
+    <div class="container">
+
+        <div class="cards">
+            <div class="card">
+                <p>Total Controls</p>
+                <h2 id="totalCount">0</h2>
+            </div>
+
+            <div class="card">
+                <p>Pending</p>
+                <h2 id="pendingCount">0</h2>
+            </div>
+
+            <div class="card">
+                <p>Collected</p>
+                <h2 id="collectedCount">0</h2>
+            </div>
+
+            <div class="card">
+                <p>Audit Readiness</p>
+                <h2 id="readinessPercent">0%</h2>
+            </div>
+        </div>
+
+        <div data-aos="zoom-in">
+            <a class="btn" href="tracker.html">Go to Evidence Tracker</a>
+        </div>
+
+    </div>
+
+
+    <!-- AOS Script -->
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>
+        AOS.init({
+            duration: 800,
+            once: true
+        });
+
+        function updateDashboard() {
+            const controls = JSON.parse(localStorage.getItem("controls")) || [];
+
+            const total = controls.length;
+            const pending = controls.filter(c => c.status === "Pending").length;
+            const collected = controls.filter(c => c.status === "Collected").length;
+
+            const readiness = total === 0 ? 0 : Math.round((collected / total) * 100);
+
+            document.getElementById("totalCount").innerText = total;
+            document.getElementById("pendingCount").innerText = pending;
+            document.getElementById("collectedCount").innerText = collected;
+            document.getElementById("readinessPercent").innerText = readiness + "%";
+        }
+
+        updateDashboard();
+    </script>
+
+</body>
+
+</html>
