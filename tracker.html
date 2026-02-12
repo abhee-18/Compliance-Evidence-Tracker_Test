@@ -5,17 +5,15 @@
     <meta charset="UTF-8">
     <title>Evidence Tracker</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- firesbasecode -->
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-    <!-- firesbasecode -->
 
     <!-- Google Font -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
 
     <!-- AOS -->
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+
+    <!-- Excel Export Library -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 
     <style>
         * {
@@ -52,7 +50,6 @@
             padding: 40px 8%;
         }
 
-        /* Form Card */
         .form-card {
             background: white;
             padding: 25px;
@@ -72,14 +69,6 @@
             border-radius: 10px;
             border: 1px solid #e2e8f0;
             font-family: 'Poppins', sans-serif;
-            transition: 0.3s ease;
-        }
-
-        input:focus,
-        select:focus {
-            border-color: #4f46e5;
-            outline: none;
-            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
         }
 
         .btn {
@@ -90,24 +79,9 @@
             border-radius: 10px;
             cursor: pointer;
             font-weight: 500;
-            transition: 0.3s ease;
+            margin-right: 10px;
         }
 
-        .btn:hover {
-            transform: scale(1.05);
-            box-shadow: 0 10px 25px rgba(79, 70, 229, 0.3);
-        }
-
-        .delete-btn {
-            background: #ef4444;
-        }
-
-        .delete-btn:hover {
-            background: #dc2626;
-            transform: scale(1.05);
-        }
-
-        /* Table */
         table {
             width: 100%;
             border-collapse: collapse;
@@ -122,45 +96,21 @@
             padding: 14px;
             text-align: left;
             font-size: 14px;
-            color: #475569;
         }
 
         td {
             padding: 14px;
             border-top: 1px solid #f1f5f9;
             font-size: 14px;
-            color: #334155;
-        }
-
-        tr:hover {
-            background: #f8fafc;
-        }
-
-        /* Deletbtn */
-        .action-btn {
-            padding: 6px 10px;
-            border-radius: 8px;
-            border: none;
-            cursor: pointer;
-            font-size: 12px;
-            transition: 0.2s ease;
         }
 
         .delete-btn {
             background: #fee2e2;
             color: #b91c1c;
-        }
-
-        .delete-btn:hover {
-            background: #fecaca;
-        }
-
-        /* Deletbtn */
-
-
-        .action-cell {
-            display: flex;
-            gap: 8px;
+            border: none;
+            padding: 6px 10px;
+            border-radius: 8px;
+            cursor: pointer;
         }
 
         html {
@@ -171,18 +121,18 @@
 
 <body>
 
-    <div class="header" data-aos="fade-down">
+    <div class="header">
         <h1>Evidence Tracker</h1>
         <p>Track SOC 2 / ISO 27001 Audit Evidence</p>
     </div>
 
     <div class="container">
 
-        <div class="form-card" data-aos="fade-up">
+        <div class="form-card">
             <h3 style="margin-bottom:15px;">Add New Control</h3>
 
             <div class="form-group">
-                <input type="text" id="controlName" placeholder="Control Name (e.g., Access Review)">
+                <input type="text" id="controlName" placeholder="Control Name">
             </div>
 
             <div class="form-group">
@@ -204,9 +154,10 @@
             </div>
 
             <button class="btn" onclick="addControl()">Add Control</button>
+            <button class="btn" onclick="exportToExcel()">Export to Excel</button>
         </div>
 
-        <table data-aos="fade-up" data-aos-delay="200">
+        <table>
             <thead>
                 <tr>
                     <th>Control Name</th>
@@ -221,23 +172,17 @@
 
     </div>
 
-    <!-- AOS -->
-    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
     <script>
-        AOS.init({ duration: 800, once: true });
+        const STORAGE_KEY = "evidenceTrackerControls";
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyCv0WYRic-2y5LhM_QNt1DiDCAWJh6-cnE",
-            authDomain: "compliance-evidence-app-test1.firebaseapp.com",
-            projectId: "compliance-evidence-app-test1",
-            appId: "1:80780624104:web:126ab773c08fa77aea495d"
-        };
+        function getControls() {
+            return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+        }
 
-        firebase.initializeApp(firebaseConfig);
+        function saveControls(data) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        }
 
-        const db = firebase.firestore(); // 🔗 Connect to Firestore
-
-        // ➕ Add new control (SAVE to Firestore)
         function addControl() {
             const name = document.getElementById("controlName").value;
             const category = document.getElementById("category").value;
@@ -248,128 +193,114 @@
                 return;
             }
 
-            db.collection("controls").add({
-                name: name,
-                category: category,
-                status: status,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            }).then(() => {
-                document.getElementById("controlName").value = "";
-                document.getElementById("category").value = "";
-                loadControls(); // reload table from Firestore
-            }).catch((error) => {
-                console.error("Error adding document: ", error);
-                alert("Failed to save to database");
+            const controls = getControls();
+
+            controls.push({
+                id: Date.now(),
+                name,
+                category,
+                status,
+                evidenceName: ""
             });
+
+            saveControls(controls);
+            document.getElementById("controlName").value = "";
+            document.getElementById("category").value = "";
+            loadControls();
         }
 
-        // 📥 Load controls (READ from Firestore)
         function loadControls() {
             const table = document.getElementById("trackerTable");
             table.innerHTML = "";
 
-            db.collection("controls").get()
-                .then((querySnapshot) => {
-                    querySnapshot.forEach((doc) => {
-                        const data = doc.data();
-                        const row = table.insertRow();
+            const controls = getControls();
 
-                        row.insertCell(0).innerText = data.name;
-                        row.insertCell(1).innerText = data.category;
+            controls.forEach((data) => {
+                const row = table.insertRow();
 
-                        // Status dropdown
-                        const statusCell = row.insertCell(2);
-                        const select = document.createElement("select");
-                        ["Pending", "Collected"].forEach((s) => {
-                            const opt = document.createElement("option");
-                            opt.value = s;
-                            opt.text = s;
-                            if (data.status === s) opt.selected = true;
-                            select.appendChild(opt);
-                        });
-                        select.onchange = () => updateStatus(doc.id, select.value);
-                        statusCell.appendChild(select);
+                row.insertCell(0).innerText = data.name;
+                row.insertCell(1).innerText = data.category;
 
-                        // 📎 Evidence (local file upload)
-                        const evidenceCell = row.insertCell(3);
-                        const fileInput = document.createElement("input");
-                        fileInput.type = "file";
-                        fileInput.onchange = (e) => saveLocalEvidence(doc.id, e.target.files[0]);
-                        evidenceCell.appendChild(fileInput);
-
-                        // Show file name if already saved
-                        if (data.evidenceName) {
-                            const nameTag = document.createElement("div");
-                            nameTag.innerText = "📄 " + data.evidenceName;
-                            nameTag.style.fontSize = "12px";
-                            nameTag.style.marginTop = "6px";
-                            evidenceCell.appendChild(nameTag);
-                        }
-
-                        // Actions (Delete)
-                        const actionCell = row.insertCell(4);
-                        const delBtn = document.createElement("button");
-                        delBtn.innerText = "Delete";
-                        delBtn.className = "action-btn delete-btn";
-                        delBtn.onclick = () => deleteControl(doc.id);
-                        actionCell.appendChild(delBtn);
-                    });
+                const statusCell = row.insertCell(2);
+                const select = document.createElement("select");
+                ["Pending", "Collected"].forEach((s) => {
+                    const opt = document.createElement("option");
+                    opt.value = s;
+                    opt.text = s;
+                    if (data.status === s) opt.selected = true;
+                    select.appendChild(opt);
                 });
-        }
+                select.onchange = () => updateStatus(data.id, select.value);
+                statusCell.appendChild(select);
 
+                const evidenceCell = row.insertCell(3);
+                const fileInput = document.createElement("input");
+                fileInput.type = "file";
+                fileInput.onchange = (e) => saveLocalEvidence(data.id, e.target.files[0]);
+                evidenceCell.appendChild(fileInput);
 
-        function saveLocalEvidence(docId, file) {
-            if (!file) return;
+                if (data.evidenceName) {
+                    const nameTag = document.createElement("div");
+                    nameTag.innerText = "📄 " + data.evidenceName;
+                    nameTag.style.fontSize = "12px";
+                    nameTag.style.marginTop = "6px";
+                    evidenceCell.appendChild(nameTag);
+                }
 
-            db.collection("controls").doc(docId).update({
-                evidenceName: file.name,
-                evidenceType: file.type,
-                evidenceSize: file.size
-            }).then(() => {
-                loadControls();
-                alert("Evidence attached (local reference)");
-            }).catch((err) => {
-                console.error(err);
-                alert("Failed to attach evidence");
+                const actionCell = row.insertCell(4);
+                const delBtn = document.createElement("button");
+                delBtn.innerText = "Delete";
+                delBtn.className = "delete-btn";
+                delBtn.onclick = () => deleteControl(data.id);
+                actionCell.appendChild(delBtn);
             });
         }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
         function updateStatus(id, newStatus) {
-            db.collection("controls").doc(id).update({
-                status: newStatus
-            }).then(() => {
-                console.log("Status updated");
-            }).catch((err) => console.error(err));
+            const controls = getControls().map(c =>
+                c.id === id ? { ...c, status: newStatus } : c
+            );
+            saveControls(controls);
         }
 
         function deleteControl(id) {
             if (!confirm("Delete this control?")) return;
-
-            db.collection("controls").doc(id).delete()
-                .then(() => loadControls())
-                .catch((err) => console.error(err));
+            const controls = getControls().filter(c => c.id !== id);
+            saveControls(controls);
+            loadControls();
         }
 
-        window.addEventListener("load", () => {
+        function saveLocalEvidence(id, file) {
+            if (!file) return;
+            const controls = getControls().map(c =>
+                c.id === id ? { ...c, evidenceName: file.name } : c
+            );
+            saveControls(controls);
             loadControls();
-        });
+        }
+
+        function exportToExcel() {
+            const controls = getControls();
+            if (controls.length === 0) {
+                alert("No data to export");
+                return;
+            }
+
+            const exportData = controls.map(c => ({
+                "Control Name": c.name,
+                "Category": c.category,
+                "Status": c.status,
+                "Evidence File": c.evidenceName || "Not Attached"
+            }));
+
+            const worksheet = XLSX.utils.json_to_sheet(exportData);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Evidence Tracker");
+
+            XLSX.writeFile(workbook, "Evidence_Tracker.xlsx");
+        }
+
+        window.addEventListener("load", loadControls);
     </script>
 
 </body>
